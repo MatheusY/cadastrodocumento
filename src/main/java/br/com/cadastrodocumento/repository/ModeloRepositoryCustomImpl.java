@@ -22,7 +22,7 @@ import br.com.cadastrodocumento.dto.FiltroModeloDTO;
 import br.com.cadastrodocumento.exception.AbstractException;
 import br.com.cadastrodocumento.models.entity.Modelo;
 import br.com.cadastrodocumento.models.entity.Modelo_;
-import br.com.cadastrodocumento.models.entity.TipoDocumentoEnum;
+import br.com.cadastrodocumento.models.enumeration.TipoDocumentoEnum;
 
 public class ModeloRepositoryCustomImpl implements ModeloRepositoryCustom {
 

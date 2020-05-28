@@ -25,7 +25,7 @@ import br.com.cadastrodocumento.service.ModeloService;
 import br.com.cadastrodocumento.vo.ModeloVO;
 
 @RestController
-@RequestMapping
+@RequestMapping("/modelo")
 public class ModeloController extends AbstractController {
 	
 	@Autowired

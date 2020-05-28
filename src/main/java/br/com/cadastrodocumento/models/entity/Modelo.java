@@ -11,6 +11,8 @@ import javax.persistence.Lob;
 import javax.persistence.Table;
 import javax.persistence.UniqueConstraint;
 
+import br.com.cadastrodocumento.models.enumeration.TipoDocumentoEnum;
+
 @Entity
 @Table(name = "modelo", uniqueConstraints = { @UniqueConstraint(columnNames = { "uf", "tipo_documento", "ano" }) })
 public class Modelo {

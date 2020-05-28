@@ -3,6 +3,8 @@ package br.com.cadastrodocumento.models.entity;
 import javax.persistence.metamodel.SingularAttribute;
 import javax.persistence.metamodel.StaticMetamodel;
 
+import br.com.cadastrodocumento.models.enumeration.TipoDocumentoEnum;
+
 @StaticMetamodel(Modelo.class)
 public abstract class Modelo_ {
 
