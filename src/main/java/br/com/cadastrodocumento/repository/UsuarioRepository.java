@@ -8,10 +8,8 @@ import br.com.cadastrodocumento.models.entity.Usuario;
 
 public interface UsuarioRepository extends CrudRepository<Usuario, Long>{
 
-	Usuario findByUsuario(String username);
+	Optional<Usuario> findByUsuario(String usuario);
 
 	Optional<Usuario> findByUsuarioAndSenha(String usuario, String senhaHash);
-
-	Optional<Usuario> findByToken(String token);
 
 }

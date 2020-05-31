@@ -30,9 +30,6 @@ public class Usuario {
 	@Column(name = "senha_hash", nullable = false)
 	private String senha;
 	
-	@Column(name = "token")
-	private String token;
-	
 	@Column(name = "data_cadastro", nullable = false)
 	private LocalDate dataCadastro;
 	
@@ -72,14 +69,6 @@ public class Usuario {
 		this.senha = senha;
 	}
 	
-	public String getToken() {
-		return token;
-	}
-
-	public void setToken(String token) {
-		this.token = token;
-	}
-
 	public LocalDate getDataCadastro() {
 		return dataCadastro;
 	}

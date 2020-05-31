@@ -1,81 +1,81 @@
 package br.com.cadastrodocumento.service;
 
-import java.security.spec.KeySpec;
 import java.time.LocalDate;
+import java.util.Date;
 import java.util.Optional;
-import java.util.UUID;
 
 import javax.crypto.Cipher;
-import javax.crypto.SecretKey;
 import javax.crypto.SecretKeyFactory;
 import javax.crypto.spec.DESedeKeySpec;
+import javax.xml.bind.DatatypeConverter;
 
-import org.apache.tomcat.util.codec.binary.Base64;
+import org.hibernate.jpa.internal.util.LogHelper;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.http.HttpStatus;
 import org.springframework.security.core.authority.AuthorityUtils;
 import org.springframework.security.core.userdetails.User;
-import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
+import org.springframework.security.core.userdetails.UsernameNotFoundException;
 import org.springframework.stereotype.Service;
 
+import br.com.cadastrodocumento.exception.AbstractException;
+import br.com.cadastrodocumento.helper.LoginHelper;
+import br.com.cadastrodocumento.models.entity.EncryptConfig;
 import br.com.cadastrodocumento.models.entity.Usuario;
 import br.com.cadastrodocumento.models.enumeration.PerfilEnum;
 import br.com.cadastrodocumento.repository.UsuarioRepository;
+import io.jsonwebtoken.Claims;
+import io.jsonwebtoken.ExpiredJwtException;
+import io.jsonwebtoken.Jwts;
 
 @Service
 public class UsuarioService {
 
+
+
 	@Autowired
 	private UsuarioRepository usuarioRepository;
 	
-	  private static final String UNICODE_FORMAT = "UTF8";
-	    public static final String DESEDE_ENCRYPTION_SCHEME = "DESede";
-	    private KeySpec ks;
-	    private SecretKeyFactory skf;
-	    private Cipher cipher;
-	    byte[] arrayBytes;
-	    private String myEncryptionKey;
-	    private String myEncryptionScheme;
-	    SecretKey key;
+
+	   	private EncryptConfig config;
+	   	public static final String DESEDE_ENCRYPTION_SCHEME = "DESede";
 	    
 	    public UsuarioService() throws Exception{
-	    	myEncryptionKey = "OmaeWaMouShindeiruNaniAA";
-	        myEncryptionScheme = DESEDE_ENCRYPTION_SCHEME;
-	        arrayBytes = myEncryptionKey.getBytes(UNICODE_FORMAT);
-	        ks = new DESedeKeySpec(arrayBytes);
-	        skf = SecretKeyFactory.getInstance(myEncryptionScheme);
-	        cipher = Cipher.getInstance(myEncryptionScheme);
-	        key = skf.generateSecret(ks);
+	    	config = new EncryptConfig();
+	    	config.setMyEncryptionKey(LoginHelper.SECRET_KEY);
+	    	config.setMyEncryptionScheme(DESEDE_ENCRYPTION_SCHEME);
+	        config.setArrayBytes(config.getMyEncryptionKey().getBytes(LoginHelper.UNICODE_FORMAT));
+	        config.setKs(new DESedeKeySpec(config.getArrayBytes()));
+	        config.setSkf(SecretKeyFactory.getInstance(config.getMyEncryptionScheme()));
+	        config.setCipher(Cipher.getInstance(config.getMyEncryptionScheme()));
+	        config.setKey(config.getSkf().generateSecret(config.getKs()));
 	    }
 	
 	public Usuario salvar(Usuario usuario) {
 		usuario.setDataCadastro(LocalDate.now());
 		
-		String hash = encrypt(usuario.getSenha());
+		String hash = LoginHelper.encrypt(config, usuario.getSenha());
 		usuario.setSenha(hash);
 		usuario.setPerfil(PerfilEnum.ADMIN);
 		
 		return usuarioRepository.save(usuario);
 	}
 
-	public Usuario findByUsername(String username) {
-		return usuarioRepository.findByUsuario(username);
-	}
 	
 	public String login(String usuario, String senha) {
-		String senhaHash =  encrypt(senha);
+		String senhaHash =  LoginHelper.encrypt(config, senha);
 		Optional<Usuario> user = usuarioRepository.findByUsuarioAndSenha(usuario, senhaHash);
 		if(user.isPresent()) {
-			String token = UUID.randomUUID().toString();
 			Usuario u = user.get();
-			u.setToken(token);
-			usuarioRepository.save(u);
+			String token = LoginHelper.createJWT(u, "subject", 86400000);
 			return token;
 		}
 		return null;
 	}
 	
 	public Optional<User> findByToken(String token){
-		Optional<Usuario> oUsuario = usuarioRepository.findByToken(token);
+		Claims claim = decodeJWT(token);
+		String nomeUsuario = (String) claim.get("usuario");
+		Optional<Usuario> oUsuario = usuarioRepository.findByUsuario(nomeUsuario);
 		if(oUsuario.isPresent()) {
 			Usuario usuario = oUsuario.get();
 			User user = new User(usuario.getUsuario(), usuario.getSenha(), true, true, true, true, AuthorityUtils.createAuthorityList(usuario.getPerfil().toString()));
@@ -84,32 +84,17 @@ public class UsuarioService {
 		return Optional.empty();
 	}
 	
-    private String encrypt(String unencryptedString) {
-        String encryptedString = null;
-        try {
-            cipher.init(Cipher.ENCRYPT_MODE, key);
-            byte[] plainText = unencryptedString.getBytes(UNICODE_FORMAT);
-            byte[] encryptedText = cipher.doFinal(plainText);
-            encryptedString = new String(Base64.encodeBase64(encryptedText));
-        } catch (Exception e) {
-            e.printStackTrace();
-        }
-        return encryptedString;
-    }
-
-
-    private String decrypt(String encryptedString) {
-        String decryptedText=null;
-        try {
-            cipher.init(Cipher.DECRYPT_MODE, key);
-            byte[] encryptedText = Base64.decodeBase64(encryptedString);
-            byte[] plainText = cipher.doFinal(encryptedText);
-            decryptedText= new String(plainText);
-        } catch (Exception e) {
-            e.printStackTrace();
-        }
-        return decryptedText;
-    }
+	public static Claims decodeJWT(String token) {
+		try {
+			Claims claims = Jwts.parser()
+					.setSigningKey(DatatypeConverter.parseBase64Binary(LoginHelper.SECRET_KEY))
+					.parseClaimsJws(token).getBody();
+			return claims;
+			
+		}catch (ExpiredJwtException e) {
+			 throw new UsernameNotFoundException("Usuário deslogado, sessão inválida!");
+		}
+	}
 	
 	
 }
