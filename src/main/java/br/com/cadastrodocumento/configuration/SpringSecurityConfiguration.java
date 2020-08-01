@@ -25,7 +25,9 @@ public class SpringSecurityConfiguration extends WebSecurityConfigurerAdapter{
 	AuthenticationProvider provider;
 	
 	 private static final RequestMatcher PROTECTED_URLS = new OrRequestMatcher(
-			  new AntPathRequestMatcher("/modelo/**")
+			  new AntPathRequestMatcher("/modelo/**"),
+			  new AntPathRequestMatcher("/tipo-documento/**"),
+			  new AntPathRequestMatcher("/dominio/**")
 			 );
 	
 	public SpringSecurityConfiguration(final AuthenticationProvider authenticationProvider) {

@@ -5,27 +5,27 @@ import javax.validation.constraints.NotNull;
 public class ModeloVO {
 
 	@NotNull
-	private String uf;
+	private UfVO uf;
 	
 	@NotNull
-	private String tipoDocumento;
+	private TipoDocumentoIdVO tipoDocumento;
 	
 	@NotNull
 	private Integer ano;
 	
-	public String getUf() {
+	public UfVO getUf() {
 		return uf;
 	}
 
-	public void setUf(String uf) {
+	public void setUf(UfVO uf) {
 		this.uf = uf;
 	}
 
-	public String getTipoDocumento() {
+	public TipoDocumentoIdVO getTipoDocumento() {
 		return tipoDocumento;
 	}
 
-	public void setTipoDocumento(String tipoDocumento) {
+	public void setTipoDocumento(TipoDocumentoIdVO tipoDocumento) {
 		this.tipoDocumento = tipoDocumento;
 	}
 

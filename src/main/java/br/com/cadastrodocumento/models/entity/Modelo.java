@@ -2,19 +2,17 @@ package br.com.cadastrodocumento.models.entity;
 
 import javax.persistence.Column;
 import javax.persistence.Entity;
-import javax.persistence.EnumType;
-import javax.persistence.Enumerated;
 import javax.persistence.GeneratedValue;
 import javax.persistence.GenerationType;
 import javax.persistence.Id;
+import javax.persistence.JoinColumn;
 import javax.persistence.Lob;
+import javax.persistence.ManyToOne;
 import javax.persistence.Table;
 import javax.persistence.UniqueConstraint;
 
-import br.com.cadastrodocumento.models.enumeration.TipoDocumentoEnum;
-
 @Entity
-@Table(name = "modelo", uniqueConstraints = { @UniqueConstraint(columnNames = { "uf", "tipo_documento", "ano" }) })
+@Table(name = "modelo", uniqueConstraints = { @UniqueConstraint(columnNames = { "id_uf", "id_tipo_documento", "ano" }) })
 public class Modelo {
 	
 	
@@ -22,14 +20,14 @@ public class Modelo {
 		
 	}
 
-	public Modelo(Long id, String uf, TipoDocumentoEnum tipoDocumento, Integer ano) {
+	public Modelo(Long id, Uf uf, TipoDocumento tipoDocumento, Integer ano) {
 		this.id = id;
 		this.uf = uf;
 		this.tipoDocumento = tipoDocumento;
 		this.ano = ano;
 	}
 
-	public Modelo(Long id, String uf, TipoDocumentoEnum tipoDocumento, Integer ano, byte[] documento) {
+	public Modelo(Long id, Uf uf, TipoDocumento tipoDocumento, Integer ano, byte[] documento) {
 		this.id = id;
 		this.uf = uf;
 		this.tipoDocumento = tipoDocumento;
@@ -41,12 +39,13 @@ public class Modelo {
 	@GeneratedValue(strategy = GenerationType.IDENTITY)
 	private Long id;
 
-	@Column(name = "uf", nullable = false)
-	private String uf;
+	@ManyToOne
+	@JoinColumn(name = "ID_UF", referencedColumnName = "ID")
+	private Uf uf;
 
-	@Column(name = "tipo_documento", nullable = false)
-	@Enumerated(EnumType.STRING)
-	private TipoDocumentoEnum tipoDocumento;
+	@ManyToOne
+	@JoinColumn(name = "ID_TIPO_DOCUMENTO", referencedColumnName = "ID")
+	private TipoDocumento tipoDocumento;
 
 	@Column(name = "ano", nullable = false)
 	private Integer ano;
@@ -63,19 +62,19 @@ public class Modelo {
 		this.id = id;
 	}
 
-	public String getUf() {
+	public Uf getUf() {
 		return uf;
 	}
 
-	public void setUf(String uf) {
+	public void setUf(Uf uf) {
 		this.uf = uf;
 	}
 
-	public TipoDocumentoEnum getTipoDocumento() {
+	public TipoDocumento getTipoDocumento() {
 		return tipoDocumento;
 	}
 
-	public void setTipoDocumento(TipoDocumentoEnum tipoDocumento) {
+	public void setTipoDocumento(TipoDocumento tipoDocumento) {
 		this.tipoDocumento = tipoDocumento;
 	}
 

@@ -4,9 +4,9 @@ public class ModeloParcialDTO {
 	
 	private Long id;
 
-	private String uf;
+	private UfDTO uf;
 	
-	private String tipoDocumento;
+	private TipoDocumentoDTO tipoDocumento;
 	
 	private Integer ano;
 
@@ -18,19 +18,19 @@ public class ModeloParcialDTO {
 		this.id = id;
 	}
 
-	public String getUf() {
+	public UfDTO getUf() {
 		return uf;
 	}
 
-	public void setUf(String uf) {
+	public void setUf(UfDTO uf) {
 		this.uf = uf;
 	}
 
-	public String getTipoDocumento() {
+	public TipoDocumentoDTO getTipoDocumento() {
 		return tipoDocumento;
 	}
 
-	public void setTipoDocumento(String tipoDocumento) {
+	public void setTipoDocumento(TipoDocumentoDTO tipoDocumento) {
 		this.tipoDocumento = tipoDocumento;
 	}
 

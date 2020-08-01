@@ -4,11 +4,12 @@ import java.util.Objects;
 
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.web.bind.annotation.PostMapping;
+import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
-import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 
 import br.com.cadastrodocumento.service.UsuarioService;
+import br.com.cadastrodocumento.vo.UsuarioVO;
 
 @RestController
 @RequestMapping("/auth")
@@ -18,8 +19,8 @@ public class LoginController {
 	private UsuarioService usuarioService;
 	
 	@PostMapping
-	public String login(@RequestParam("usuario") String usuario, @RequestParam("senha") String senha) {
-		String token = usuarioService.login(usuario, senha);
+	public String login(@RequestBody UsuarioVO usuario){
+		String token = usuarioService.login(usuario.getUsuario(), usuario.getSenha());
 		if(Objects.isNull(token)){
 			return "Usuário/Senha inválido!";
 		}

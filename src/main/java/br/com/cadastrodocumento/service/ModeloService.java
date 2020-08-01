@@ -12,15 +12,21 @@ import org.springframework.stereotype.Service;
 import br.com.cadastrodocumento.dto.FiltroModeloDTO;
 import br.com.cadastrodocumento.exception.AbstractException;
 import br.com.cadastrodocumento.models.entity.Modelo;
+import br.com.cadastrodocumento.models.entity.TipoDocumento;
 import br.com.cadastrodocumento.repository.ModeloRepository;
+import br.com.cadastrodocumento.repository.TipoDocumentoRepository;
 
 @Service
 public class ModeloService {
 
 	private static final String MODELO_NÃO_ENCONTRADO = "Modelo não encontrado!";
+	
 	@Autowired
 	private ModeloRepository modeloRepository;
 
+	@Autowired
+	private TipoDocumentoRepository tipoDocumentoRepository;
+	
 	public Page<Modelo> filtraModelos(FiltroModeloDTO filtro, Pageable pageable) throws AbstractException {
 			return modeloRepository.filtro(filtro, pageable);
 	}
@@ -30,6 +36,8 @@ public class ModeloService {
 	}
 
 	public Modelo salvar(Modelo modelo) {
+		TipoDocumento tipoDocumento = tipoDocumentoRepository.findById(modelo.getTipoDocumento().getId()).get();
+		modelo.setTipoDocumento(tipoDocumento);
 		return modeloRepository.save(modelo);
 	}
 
