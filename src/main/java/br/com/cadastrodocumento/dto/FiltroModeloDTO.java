@@ -2,25 +2,25 @@ package br.com.cadastrodocumento.dto;
 
 public class FiltroModeloDTO {
 
-	private String uf;
+	private Short uf;
 	
-	private String tipoDocumento;
+	private Short tipoDocumento;
 	
 	private Integer ano;
 
-	public String getUf() {
+	public Short getUf() {
 		return uf;
 	}
 
-	public void setUf(String uf) {
+	public void setUf(Short uf) {
 		this.uf = uf;
 	}
 
-	public String getTipoDocumento() {
+	public Short getTipoDocumento() {
 		return tipoDocumento;
 	}
 
-	public void setTipoDocumento(String tipoDocumento) {
+	public void setTipoDocumento(Short tipoDocumento) {
 		this.tipoDocumento = tipoDocumento;
 	}
 

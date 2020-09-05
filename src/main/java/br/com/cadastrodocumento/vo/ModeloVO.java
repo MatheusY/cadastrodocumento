@@ -2,6 +2,8 @@ package br.com.cadastrodocumento.vo;
 
 import javax.validation.constraints.NotNull;
 
+import org.springframework.web.multipart.MultipartFile;
+
 public class ModeloVO {
 
 	@NotNull
@@ -36,5 +38,4 @@ public class ModeloVO {
 	public void setAno(Integer ano) {
 		this.ano = ano;
 	}
-
 }

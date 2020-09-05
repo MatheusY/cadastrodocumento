@@ -29,7 +29,7 @@ public class TipoDocumentoController extends AbstractController {
 	private TipoDocumentoService tipoDocumentoService;
 
 	@GetMapping("/all")
-	public List<TipoDocumentoDTO> findById(@PathVariable(value = "id") Long id) throws AbstractException {
+	public List<TipoDocumentoDTO> findAll() throws AbstractException {
 		return convertToDTO(tipoDocumentoService.listarTodos(), TipoDocumentoDTO.class);
 	}
 	

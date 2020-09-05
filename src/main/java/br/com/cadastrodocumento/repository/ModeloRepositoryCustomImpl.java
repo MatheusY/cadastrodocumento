@@ -16,13 +16,13 @@ import javax.persistence.criteria.Root;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageImpl;
 import org.springframework.data.domain.Pageable;
-import org.springframework.http.HttpStatus;
 
 import br.com.cadastrodocumento.dto.FiltroModeloDTO;
 import br.com.cadastrodocumento.exception.AbstractException;
 import br.com.cadastrodocumento.models.entity.Modelo;
 import br.com.cadastrodocumento.models.entity.Modelo_;
-import br.com.cadastrodocumento.models.enumeration.TipoDocumentoEnum;
+import br.com.cadastrodocumento.models.entity.TipoDocumento_;
+import br.com.cadastrodocumento.models.entity.Uf_;
 
 public class ModeloRepositoryCustomImpl implements ModeloRepositoryCustom {
 
@@ -71,15 +71,11 @@ public class ModeloRepositoryCustomImpl implements ModeloRepositoryCustom {
 			}
 			
 			if (Objects.nonNull(filtro.getUf())) {
-				predicates.add(criteriaBuilder.equal(root.get(Modelo_.uf), filtro.getUf()));
+				predicates.add(criteriaBuilder.equal(root.get(Modelo_.uf).get(Uf_.id), filtro.getUf()));
 			}
 			
 			if (Objects.nonNull(filtro.getTipoDocumento())) {
-				try {
-				predicates.add(criteriaBuilder.equal(root.get(Modelo_.tipoDocumento), TipoDocumentoEnum.valueOf(filtro.getTipoDocumento())));
-				}catch (IllegalArgumentException e) {
-					throw new AbstractException("Tipo de documento inválido!", HttpStatus.BAD_REQUEST);
-				}
+				predicates.add(criteriaBuilder.equal(root.get(Modelo_.tipoDocumento).get(TipoDocumento_.id) ,filtro.getTipoDocumento()));
 			}
 		}
 

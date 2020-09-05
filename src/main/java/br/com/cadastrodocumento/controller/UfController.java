@@ -17,7 +17,7 @@ public class UfController extends AbstractController{
 	@Autowired
 	private UfService ufService;
 	
-	@GetMapping
+	@GetMapping("/all")
 	public List<UfDTO> getUfs(){
 		return convertToDTO(ufService.listAll(), UfDTO.class);
 	}

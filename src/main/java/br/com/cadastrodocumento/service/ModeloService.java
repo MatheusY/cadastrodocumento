@@ -8,6 +8,7 @@ import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Service;
+import org.springframework.web.multipart.MultipartFile;
 
 import br.com.cadastrodocumento.dto.FiltroModeloDTO;
 import br.com.cadastrodocumento.exception.AbstractException;
@@ -41,9 +42,9 @@ public class ModeloService {
 		return modeloRepository.save(modelo);
 	}
 
-	public void salvarDocumento(Long id, InputStream imagem) throws AbstractException {
+	public void salvarDocumento(Long id, MultipartFile imagem) throws AbstractException {
 		try {
-			if (modeloRepository.atualizarDocumento(id, imagem.readAllBytes()) == 0) {
+			if (modeloRepository.atualizarDocumento(id, imagem.getBytes()) == 0) {
 				throw new AbstractException(MODELO_NÃO_ENCONTRADO, HttpStatus.NOT_FOUND);
 			}
 		} catch (IOException e) {

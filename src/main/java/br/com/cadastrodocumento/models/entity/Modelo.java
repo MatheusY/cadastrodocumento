@@ -1,5 +1,7 @@
 package br.com.cadastrodocumento.models.entity;
 
+import java.io.IOException;
+
 import javax.persistence.Column;
 import javax.persistence.Entity;
 import javax.persistence.GeneratedValue;
@@ -10,6 +12,8 @@ import javax.persistence.Lob;
 import javax.persistence.ManyToOne;
 import javax.persistence.Table;
 import javax.persistence.UniqueConstraint;
+
+import org.springframework.web.multipart.MultipartFile;
 
 @Entity
 @Table(name = "modelo", uniqueConstraints = { @UniqueConstraint(columnNames = { "id_uf", "id_tipo_documento", "ano" }) })
@@ -92,6 +96,14 @@ public class Modelo {
 
 	public void setDocumento(byte[] documento) {
 		this.documento = documento;
+	}
+	
+	public void setDocumento(MultipartFile arquivo) {
+		try {
+			this.documento = arquivo.getBytes();
+		} catch (IOException e) {
+			System.err.print(e.getMessage()); 
+		}
 	}
 	
 }

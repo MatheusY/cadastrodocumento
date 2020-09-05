@@ -1,15 +1,16 @@
 package br.com.cadastrodocumento.controller;
 
-import java.io.InputStream;
-
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.PutMapping;
+import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.ResponseStatus;
 import org.springframework.web.bind.annotation.RestController;
+import org.springframework.web.multipart.MultipartFile;
 import org.springframework.web.server.ResponseStatusException;
 
 import br.com.cadastrodocumento.exception.AbstractException;
@@ -24,7 +25,7 @@ public class ImagemController {
 	
 	@PostMapping("/{id}")
 	@ResponseStatus(code = HttpStatus.CREATED)
-	public void save(@PathVariable("id") Long id, InputStream imagem) throws AbstractException {
+	public void save(@PathVariable("id") Long id, @RequestBody MultipartFile imagem) throws AbstractException {
 		try {
 			modeloService.salvarDocumento(id, imagem);
 		}catch (ResponseStatusException e) {
@@ -34,7 +35,7 @@ public class ImagemController {
 	
 	@PutMapping("/{id}")
 	@ResponseStatus(code = HttpStatus.NO_CONTENT)
-	public void update(@PathVariable("id") Long id, InputStream imagem) throws AbstractException {
+	public void update(@PathVariable("id") Long id, @RequestBody MultipartFile imagem) throws AbstractException {
 		modeloService.salvarDocumento(id, imagem);
 	}
 }
