@@ -61,7 +61,7 @@ public class UsuarioService {
 	}
 
 	
-	public String login(String usuario, String senha) {
+	public String login(String usuario, String senha) throws AbstractException {
 		String senhaHash =  LoginHelper.encrypt(config, senha);
 		Optional<Usuario> user = usuarioRepository.findByUsuarioAndSenha(usuario, senhaHash);
 		if(user.isPresent()) {
@@ -69,7 +69,7 @@ public class UsuarioService {
 			String token = LoginHelper.createJWT(u, "subject", 86400000);
 			return token;
 		}
-		return null;
+		throw new AbstractException("Usuário ou senha inválido!", HttpStatus.BAD_REQUEST);
 	}
 	
 	public Optional<User> findByToken(String token){
