@@ -27,7 +27,8 @@ public class SpringSecurityConfiguration extends WebSecurityConfigurerAdapter{
 	 private static final RequestMatcher PROTECTED_URLS = new OrRequestMatcher(
 			  new AntPathRequestMatcher("/modelo/**"),
 			  new AntPathRequestMatcher("/tipo-documento/**"),
-			  new AntPathRequestMatcher("/dominio/**")
+			  new AntPathRequestMatcher("/dominio/**"),
+			  new AntPathRequestMatcher("/usuario/**")
 			 );
 	
 	public SpringSecurityConfiguration(final AuthenticationProvider authenticationProvider) {
@@ -42,7 +43,7 @@ public class SpringSecurityConfiguration extends WebSecurityConfigurerAdapter{
 	
 	@Override
 	public void configure(WebSecurity web) throws Exception {
-		web.ignoring().antMatchers("/auth/**", "/usuario/**");
+		web.ignoring().antMatchers("/auth/**");
 	}
 	
 	@Override

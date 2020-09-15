@@ -1,7 +1,6 @@
 package br.com.cadastrodocumento.service;
 
 import java.time.LocalDate;
-import java.util.Date;
 import java.util.Optional;
 
 import javax.crypto.Cipher;
@@ -9,7 +8,6 @@ import javax.crypto.SecretKeyFactory;
 import javax.crypto.spec.DESedeKeySpec;
 import javax.xml.bind.DatatypeConverter;
 
-import org.hibernate.jpa.internal.util.LogHelper;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.security.core.authority.AuthorityUtils;
@@ -30,6 +28,7 @@ import io.jsonwebtoken.Jwts;
 @Service
 public class UsuarioService {
 
+	private static final String USUÁRIO_SEM_PERMISSÃO = "Usuário sem permissão";
 
 
 	@Autowired
@@ -38,6 +37,7 @@ public class UsuarioService {
 
 	   	private EncryptConfig config;
 	   	public static final String DESEDE_ENCRYPTION_SCHEME = "DESede";
+	   	private static final String USUARIO_NAO_ENCONTRADO = "Usuário não encontrado!";
 	    
 	    public UsuarioService() throws Exception{
 	    	config = new EncryptConfig();
@@ -55,7 +55,7 @@ public class UsuarioService {
 		
 		String hash = LoginHelper.encrypt(config, usuario.getSenha());
 		usuario.setSenha(hash);
-		usuario.setPerfil(PerfilEnum.ADMIN);
+		usuario.setPerfil(PerfilEnum.VISUALIZADOR);
 		
 		return usuarioRepository.save(usuario);
 	}
@@ -94,6 +94,21 @@ public class UsuarioService {
 		}catch (ExpiredJwtException e) {
 			 throw new UsernameNotFoundException("Usuário deslogado, sessão inválida!");
 		}
+	}
+
+	public Usuario findByUsuario(String name) throws AbstractException {
+		return usuarioRepository.findByUsuario(name).orElseThrow(() -> new AbstractException(USUARIO_NAO_ENCONTRADO, HttpStatus.NOT_FOUND));
+	}
+
+	public Usuario findById(Long id, String nomeUsuario) throws AbstractException {
+		Usuario usuario = usuarioRepository.findById(id).orElseThrow(() -> new AbstractException(USUARIO_NAO_ENCONTRADO, HttpStatus.NOT_FOUND));
+		if(!nomeUsuario.equals(usuario.getUsuario())) {
+			Usuario usuarioLogado = findByUsuario(nomeUsuario);
+			if(!PerfilEnum.ADMIN.equals(usuarioLogado.getPerfil())) {
+				throw new AbstractException(USUÁRIO_SEM_PERMISSÃO, HttpStatus.FORBIDDEN);
+			}
+		}
+		return usuario;
 	}
 	
 	
