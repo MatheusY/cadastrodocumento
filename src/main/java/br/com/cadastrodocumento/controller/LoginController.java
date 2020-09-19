@@ -8,7 +8,7 @@ import org.springframework.web.bind.annotation.RestController;
 
 import br.com.cadastrodocumento.exception.AbstractException;
 import br.com.cadastrodocumento.service.UsuarioService;
-import br.com.cadastrodocumento.vo.UsuarioVO;
+import br.com.cadastrodocumento.vo.AuthVO;
 
 @RestController
 @RequestMapping("/auth")
@@ -18,7 +18,7 @@ public class LoginController {
 	private UsuarioService usuarioService;
 	
 	@PostMapping
-	public String login(@RequestBody UsuarioVO usuario) throws AbstractException{
+	public String login(@RequestBody AuthVO usuario) throws AbstractException{
 		String token = usuarioService.login(usuario.getUsuario(), usuario.getSenha());
 		return token;
 	}

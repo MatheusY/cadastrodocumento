@@ -85,4 +85,8 @@ public class Usuario {
 		this.perfil = perfil;
 	}
 	
+	public boolean eAdmin() {
+		return PerfilEnum.ADMIN.equals(this.perfil);
+	}
+	
 }

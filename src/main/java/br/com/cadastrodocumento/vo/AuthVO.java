@@ -5,9 +5,7 @@ import javax.validation.constraints.NotNull;
 
 import org.hibernate.validator.constraints.Length;
 
-import br.com.cadastrodocumento.models.enumeration.PerfilEnum;
-
-public class UsuarioVO {
+public class AuthVO {
 	
 	private Long id;
 
@@ -18,7 +16,9 @@ public class UsuarioVO {
 	@NotNull
 	private String email;
 	
-	private String perfil;
+	@NotBlank
+	@Length(min = 4, message = "A senha deve ter mais de 4 digitos")
+	private String senha;
 	
 	public Long getId() {
 		return id;
@@ -36,6 +36,14 @@ public class UsuarioVO {
 		this.usuario = usuario;
 	}
 
+	public String getSenha() {
+		return senha;
+	}
+
+	public void setSenha(String senha) {
+		this.senha = senha;
+	}
+
 	public String getEmail() {
 		return email;
 	}
@@ -43,13 +51,6 @@ public class UsuarioVO {
 	public void setEmail(String email) {
 		this.email = email;
 	}
-
-	public String getPerfil() {
-		return perfil;
-	}
-
-	public void setPerfil(String perfil) {
-		this.perfil = perfil;
-	}
+	
 	
 }

@@ -103,13 +103,30 @@ public class UsuarioService {
 	public Usuario findById(Long id, String nomeUsuario) throws AbstractException {
 		Usuario usuario = usuarioRepository.findById(id).orElseThrow(() -> new AbstractException(USUARIO_NAO_ENCONTRADO, HttpStatus.NOT_FOUND));
 		if(!nomeUsuario.equals(usuario.getUsuario())) {
-			Usuario usuarioLogado = findByUsuario(nomeUsuario);
-			if(!PerfilEnum.ADMIN.equals(usuarioLogado.getPerfil())) {
+			if(!verificaUsuarioEAdmin(nomeUsuario)) {
 				throw new AbstractException(USUÁRIO_SEM_PERMISSÃO, HttpStatus.FORBIDDEN);
 			}
 		}
 		return usuario;
 	}
+
+	public void update(Usuario usuario, String nomeUsuario) throws AbstractException {
+		Usuario usuarioPersistido = usuarioRepository.findById(usuario.getId()).orElseThrow(() -> new AbstractException(USUARIO_NAO_ENCONTRADO, HttpStatus.NOT_FOUND));
+		usuario.setSenha(usuarioPersistido.getSenha());
+		usuario.setDataCadastro(usuarioPersistido.getDataCadastro());
+		if(verificaUsuarioEAdmin(nomeUsuario)) {
+			usuarioRepository.save(usuario);
+		} else if(usuarioPersistido.getUsuario().equals(nomeUsuario)) {
+			usuario.setPerfil(usuarioPersistido.getPerfil());
+			usuarioRepository.save(usuario);
+		} else {
+			throw new AbstractException(USUÁRIO_SEM_PERMISSÃO, HttpStatus.FORBIDDEN);
+		}
+	}
 	
+	private boolean verificaUsuarioEAdmin(String nomeUsuario) throws AbstractException {
+		Usuario usuarioLogado = findByUsuario(nomeUsuario);
+		return usuarioLogado.eAdmin();
+	}
 	
 }
