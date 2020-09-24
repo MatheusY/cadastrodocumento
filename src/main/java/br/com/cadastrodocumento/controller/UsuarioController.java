@@ -16,6 +16,7 @@ import org.springframework.web.bind.annotation.ResponseBody;
 import org.springframework.web.bind.annotation.ResponseStatus;
 import org.springframework.web.bind.annotation.RestController;
 
+import br.com.cadastrodocumento.dto.TokenDTO;
 import br.com.cadastrodocumento.dto.UsuarioDTO;
 import br.com.cadastrodocumento.exception.AbstractException;
 import br.com.cadastrodocumento.models.entity.Usuario;
@@ -37,11 +38,12 @@ public class UsuarioController extends AbstractController {
 	}
 	
 	@PutMapping("/{id}")
-	@ResponseStatus(code = HttpStatus.NO_CONTENT)
-	public void update(@PathVariable("id") Long id, @RequestBody @Valid UsuarioVO usuarioVO, Principal principal) throws AbstractException {
+	@ResponseStatus(code = HttpStatus.OK)
+	public TokenDTO update(@PathVariable("id") Long id, @RequestBody @Valid UsuarioVO usuarioVO, Principal principal) throws AbstractException {
 		Usuario usuario = convertVOToEntity(usuarioVO, Usuario.class);
 		usuario.setId(id);
-		usuarioService.update(usuario, principal.getName());
+		String token = usuarioService.update(usuario, principal.getName());
+		return new TokenDTO(token);
 	}
 
 	@GetMapping

@@ -8,7 +8,7 @@ public class UsuarioDTO {
 	
 	private String email;
 	
-	private String perfil;
+	private PerfilDTO perfil;
 
 	public Long getId() {
 		return id;
@@ -34,11 +34,11 @@ public class UsuarioDTO {
 		this.email = email;
 	}
 
-	public String getPerfil() {
+	public PerfilDTO getPerfil() {
 		return perfil;
 	}
 
-	public void setPerfil(String perfil) {
+	public void setPerfil(PerfilDTO perfil) {
 		this.perfil = perfil;
 	}
 }

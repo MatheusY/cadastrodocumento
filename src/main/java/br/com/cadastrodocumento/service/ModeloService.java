@@ -1,7 +1,6 @@
 package br.com.cadastrodocumento.service;
 
 import java.io.IOException;
-import java.io.InputStream;
 
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.domain.Page;

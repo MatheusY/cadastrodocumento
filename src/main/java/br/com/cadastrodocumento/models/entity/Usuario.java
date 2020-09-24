@@ -9,6 +9,8 @@ import javax.persistence.Enumerated;
 import javax.persistence.GeneratedValue;
 import javax.persistence.GenerationType;
 import javax.persistence.Id;
+import javax.persistence.JoinColumn;
+import javax.persistence.ManyToOne;
 import javax.persistence.Table;
 
 import br.com.cadastrodocumento.models.enumeration.PerfilEnum;
@@ -33,9 +35,9 @@ public class Usuario {
 	@Column(name = "data_cadastro", nullable = false)
 	private LocalDate dataCadastro;
 	
-	@Enumerated(EnumType.STRING)
-	@Column(name = "perfil", nullable = false)
-	private PerfilEnum perfil;
+	@ManyToOne
+	@JoinColumn(name = "ID_PERFIL", referencedColumnName = "ID")
+	private Perfil perfil;
 
 	public Long getId() {
 		return id;
@@ -77,16 +79,16 @@ public class Usuario {
 		this.dataCadastro = dataCadastro;
 	}
 
-	public PerfilEnum getPerfil() {
+	public Perfil getPerfil() {
 		return perfil;
 	}
 
-	public void setPerfil(PerfilEnum perfil) {
+	public void setPerfil(Perfil perfil) {
 		this.perfil = perfil;
 	}
 	
 	public boolean eAdmin() {
-		return PerfilEnum.ADMIN.equals(this.perfil);
+		return Perfil.ADMINISTRADOR.getId().equals(this.perfil.getId());
 	}
 	
 }
