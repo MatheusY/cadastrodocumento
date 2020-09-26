@@ -7,6 +7,7 @@ import javax.validation.Valid;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.PatchMapping;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.PutMapping;
@@ -21,6 +22,7 @@ import br.com.cadastrodocumento.dto.UsuarioDTO;
 import br.com.cadastrodocumento.exception.AbstractException;
 import br.com.cadastrodocumento.models.entity.Usuario;
 import br.com.cadastrodocumento.service.UsuarioService;
+import br.com.cadastrodocumento.vo.AtualizacaoSenhaVO;
 import br.com.cadastrodocumento.vo.AuthVO;
 import br.com.cadastrodocumento.vo.UsuarioVO;
 
@@ -44,6 +46,12 @@ public class UsuarioController extends AbstractController {
 		usuario.setId(id);
 		String token = usuarioService.update(usuario, principal.getName());
 		return new TokenDTO(token);
+	}
+	
+	@PatchMapping("/trocar-senha")
+	@ResponseStatus(code = HttpStatus.NO_CONTENT)
+	public void atualizarSenha(@RequestBody @Valid AtualizacaoSenhaVO novaSenhaVO, Principal principal) throws AbstractException{
+		usuarioService.atualizarSenha(novaSenhaVO.getSenha(), novaSenhaVO.getNovaSenha(), findByUsuario(principal.getName()));
 	}
 
 	@GetMapping

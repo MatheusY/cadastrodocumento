@@ -8,7 +8,15 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageImpl;
 
+import br.com.cadastrodocumento.exception.AbstractException;
+import br.com.cadastrodocumento.models.entity.Usuario;
+import br.com.cadastrodocumento.repository.UsuarioRepository;
+import br.com.cadastrodocumento.service.UsuarioService;
+
 public class AbstractController {
+	
+	@Autowired
+	private UsuarioService usuarioService;
 
 	@Autowired
 	protected ModelMapper modelMapper;
@@ -32,5 +40,9 @@ public class AbstractController {
 
 	protected <D, T> D convertToDTO(final T model, final Class<D> dtoClass) {
 		return model != null ? modelMapper.map(model, dtoClass) : null;
+	}
+	
+	protected Usuario findByUsuario(String nomeUsuario) throws AbstractException {
+		return usuarioService.findByUsuario(nomeUsuario);
 	}
 }

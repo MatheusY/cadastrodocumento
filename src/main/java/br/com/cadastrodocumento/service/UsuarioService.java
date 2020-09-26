@@ -28,6 +28,10 @@ import io.jsonwebtoken.Jwts;
 @Service
 public class UsuarioService {
 
+	private static final String SENHAS_IGUAIS = "As senhas são iguais";
+
+	private static final String SENHA_INCORRETA = "Senha incorreta!";
+
 	private static final String USUÁRIO_OU_SENHA_INVÁLIDO = "Usuário ou senha inválido!";
 
 	private static final String USUÁRIO_SEM_PERMISSÃO = "Usuário sem permissão";
@@ -131,6 +135,18 @@ public class UsuarioService {
 	private boolean verificaUsuarioEAdmin(String nomeUsuario) throws AbstractException {
 		Usuario usuarioLogado = findByUsuario(nomeUsuario);
 		return usuarioLogado.eAdmin();
+	}
+
+	public void atualizarSenha(String senha, String novaSenha, Usuario usuario) throws AbstractException {
+		String senhaHash = LoginHelper.encrypt(config, senha);
+		if(senha.equals(novaSenha)) {
+			throw new AbstractException(SENHAS_IGUAIS, HttpStatus.BAD_REQUEST);
+		}
+		if(!senhaHash.equals(usuario.getSenha())) {
+			throw new AbstractException(SENHA_INCORRETA, HttpStatus.BAD_REQUEST);
+		}
+		usuario.setSenha(LoginHelper.encrypt(config, novaSenha));
+		usuarioRepository.save(usuario);
 	}
 
 }
