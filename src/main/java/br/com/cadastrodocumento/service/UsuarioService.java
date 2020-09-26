@@ -9,18 +9,22 @@ import javax.crypto.spec.DESedeKeySpec;
 import javax.xml.bind.DatatypeConverter;
 
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
 import org.springframework.http.HttpStatus;
 import org.springframework.security.core.authority.AuthorityUtils;
 import org.springframework.security.core.userdetails.User;
 import org.springframework.security.core.userdetails.UsernameNotFoundException;
 import org.springframework.stereotype.Service;
 
+import br.com.cadastrodocumento.dto.UsuarioDTO;
 import br.com.cadastrodocumento.exception.AbstractException;
 import br.com.cadastrodocumento.helper.LoginHelper;
 import br.com.cadastrodocumento.models.entity.EncryptConfig;
 import br.com.cadastrodocumento.models.entity.Perfil;
 import br.com.cadastrodocumento.models.entity.Usuario;
 import br.com.cadastrodocumento.repository.UsuarioRepository;
+import br.com.cadastrodocumento.vo.FiltroUsuarioVO;
 import io.jsonwebtoken.Claims;
 import io.jsonwebtoken.ExpiredJwtException;
 import io.jsonwebtoken.Jwts;
@@ -147,6 +151,13 @@ public class UsuarioService {
 		}
 		usuario.setSenha(LoginHelper.encrypt(config, novaSenha));
 		usuarioRepository.save(usuario);
+	}
+
+	public Page<Usuario> findByFiltro(FiltroUsuarioVO filtro, Pageable pageable, Usuario usuarioLogado) throws AbstractException {
+		if(!usuarioLogado.eAdmin()) {
+			throw new AbstractException(USUÁRIO_SEM_PERMISSÃO, HttpStatus.FORBIDDEN);
+		}
+		return usuarioRepository.filtro(filtro, pageable);
 	}
 
 }

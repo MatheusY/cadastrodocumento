@@ -6,7 +6,7 @@ import org.springframework.data.repository.CrudRepository;
 
 import br.com.cadastrodocumento.models.entity.Usuario;
 
-public interface UsuarioRepository extends CrudRepository<Usuario, Long>{
+public interface UsuarioRepository extends CrudRepository<Usuario, Long>, UsuarioRepositoryCustom{
 
 	Optional<Usuario> findByUsuario(String usuario);
 
