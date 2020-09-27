@@ -5,8 +5,6 @@ import javax.validation.constraints.NotNull;
 
 import org.hibernate.validator.constraints.Length;
 
-import br.com.cadastrodocumento.models.enumeration.PerfilEnum;
-
 public class UsuarioVO {
 	
 	private Long id;
@@ -18,7 +16,7 @@ public class UsuarioVO {
 	@NotNull
 	private String email;
 	
-	private String perfil;
+	private PerfilVO perfil;
 	
 	public Long getId() {
 		return id;
@@ -44,11 +42,11 @@ public class UsuarioVO {
 		this.email = email;
 	}
 
-	public String getPerfil() {
+	public PerfilVO getPerfil() {
 		return perfil;
 	}
 
-	public void setPerfil(String perfil) {
+	public void setPerfil(PerfilVO perfil) {
 		this.perfil = perfil;
 	}
 	
