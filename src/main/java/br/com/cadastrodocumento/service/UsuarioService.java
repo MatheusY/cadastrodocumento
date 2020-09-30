@@ -38,6 +38,14 @@ import io.jsonwebtoken.Jwts;
 @Service
 public class UsuarioService {
 
+	private static final String EMAIL_JÁ_VALIDADO = "Email já foi validado!";
+
+	private static final String CONTA_NÃO_ATIVA = "Conta não está ativa! Por favor fale com o administrador";
+
+	private static final String EMAIL_NÃO_CONFIRMADO = "Email não foi confirmado! Por favor valide-o";
+
+	private static final String CONTA_NÃO_ENCONTRADA = "Conta não encontrada!";
+
 	private static final String TEXTO_CONFIRMACAO = "Foi criada uma conta para esse email, caso você tenha criado clique no link abaixo: \n";
 
 	private static final String EMAIL = "sistema@modelodocumento.com.br";
@@ -96,12 +104,16 @@ public class UsuarioService {
 		usuario.setKeyEmail(rand.nextLong());
 		Usuario usuarioSalvo = usuarioRepository.save(usuario);
 		SimpleMailMessage email = new SimpleMailMessage();
+		enviarEmailConfirmacao(usuario, usuarioSalvo, email);
+		return usuarioSalvo;
+	}
+
+	private void enviarEmailConfirmacao(Usuario usuario, Usuario usuarioSalvo, SimpleMailMessage email) {
 		email.setSubject("Confirmação de email");
 		email.setTo(usuario.getEmail());
 		email.setText(TEXTO_CONFIRMACAO + getUrlValidacaoEmail(usuarioSalvo));
 		email.setFrom(EMAIL);
 		sender.send(email);
-		return usuarioSalvo;
 	}
 	
 	private String getUrlValidacaoEmail(Usuario usuario) {
@@ -112,6 +124,12 @@ public class UsuarioService {
 		String senhaHash = LoginHelper.encrypt(config, senha);
 		Usuario user = usuarioRepository.findByUsuarioAndSenha(usuario, senhaHash)
 				.orElseThrow(() -> new AbstractException(USUÁRIO_OU_SENHA_INVÁLIDO, HttpStatus.BAD_REQUEST));
+		if(!user.getEmailValidado()) {
+			throw new AbstractException(EMAIL_NÃO_CONFIRMADO, HttpStatus.BAD_REQUEST);
+		}
+		if(!user.getAtivo()) {
+			throw new AbstractException(CONTA_NÃO_ATIVA, HttpStatus.BAD_REQUEST);
+		}
 		return geraToken(user);
 	}
 
@@ -207,6 +225,15 @@ public class UsuarioService {
 		validacaoConta.setValidade(LocalDate.now().plusDays(3));
 		validacaoConta.setUsuario(usuario);
 		validacaoContaRepository.save(validacaoConta);
+	}
+
+	public void validarEmail(Long id, Long key) throws AbstractException {
+		Usuario usuario = usuarioRepository.findByIdAndKeyEmail(id, key).orElseThrow(() -> new AbstractException(CONTA_NÃO_ENCONTRADA, HttpStatus.BAD_REQUEST));
+		if(usuario.getEmailValidado()) {
+			throw new AbstractException(EMAIL_JÁ_VALIDADO, HttpStatus.BAD_REQUEST);
+		}
+		usuario.setEmailValidado(true);
+		usuarioRepository.save(usuario);
 	}
 
 }
