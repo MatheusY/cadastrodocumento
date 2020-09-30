@@ -2,6 +2,8 @@ package br.com.cadastrodocumento.service;
 
 import java.time.LocalDate;
 import java.util.Optional;
+import java.util.Random;
+import java.util.UUID;
 
 import javax.crypto.Cipher;
 import javax.crypto.SecretKeyFactory;
@@ -9,21 +11,25 @@ import javax.crypto.spec.DESedeKeySpec;
 import javax.xml.bind.DatatypeConverter;
 
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.http.HttpStatus;
+import org.springframework.mail.MailSender;
+import org.springframework.mail.SimpleMailMessage;
 import org.springframework.security.core.authority.AuthorityUtils;
 import org.springframework.security.core.userdetails.User;
 import org.springframework.security.core.userdetails.UsernameNotFoundException;
 import org.springframework.stereotype.Service;
 
-import br.com.cadastrodocumento.dto.UsuarioDTO;
 import br.com.cadastrodocumento.exception.AbstractException;
 import br.com.cadastrodocumento.helper.LoginHelper;
 import br.com.cadastrodocumento.models.entity.EncryptConfig;
 import br.com.cadastrodocumento.models.entity.Perfil;
 import br.com.cadastrodocumento.models.entity.Usuario;
+import br.com.cadastrodocumento.models.entity.ValidacaoConta;
 import br.com.cadastrodocumento.repository.UsuarioRepository;
+import br.com.cadastrodocumento.repository.ValidacaoContaRepository;
 import br.com.cadastrodocumento.vo.FiltroUsuarioVO;
 import io.jsonwebtoken.Claims;
 import io.jsonwebtoken.ExpiredJwtException;
@@ -32,6 +38,14 @@ import io.jsonwebtoken.Jwts;
 @Service
 public class UsuarioService {
 
+	private static final String TEXTO_CONFIRMACAO = "Foi criada uma conta para esse email, caso você tenha criado clique no link abaixo: \n";
+
+	private static final String EMAIL = "sistema@modelodocumento.com.br";
+
+	private static final String END_POINT_VALIDAR_CONTA = "validar-conta/";
+
+	private static final String END_POINT_USUARIO = "usuario/";
+
 	private static final String SENHAS_IGUAIS = "As senhas são iguais";
 
 	private static final String SENHA_INCORRETA = "Senha incorreta!";
@@ -39,13 +53,26 @@ public class UsuarioService {
 	private static final String USUÁRIO_OU_SENHA_INVÁLIDO = "Usuário ou senha inválido!";
 
 	private static final String USUÁRIO_SEM_PERMISSÃO = "Usuário sem permissão";
+	
+	Random rand = new Random();
 
 	@Autowired
 	private UsuarioRepository usuarioRepository;
+	
+	@Autowired
+	private ValidacaoContaRepository validacaoContaRepository;
+	
+	@Autowired
+	private MailSender sender;
+	
+	@Value("${front-end.url}")
+	private String frontUrl;
 
 	private EncryptConfig config;
 	public static final String DESEDE_ENCRYPTION_SCHEME = "DESede";
 	private static final String USUARIO_NAO_ENCONTRADO = "Usuário não encontrado!";
+	private static final String EMAIL_NAO_CADASTRADO = "E-mail não cadastrado!";
+
 
 	public UsuarioService() throws Exception {
 		config = new EncryptConfig();
@@ -64,8 +91,21 @@ public class UsuarioService {
 		String hash = LoginHelper.encrypt(config, usuario.getSenha());
 		usuario.setSenha(hash);
 		usuario.setPerfil(Perfil.VISUALIZADOR);
-
-		return usuarioRepository.save(usuario);
+		usuario.setAtivo(false);
+		usuario.setEmailValidado(false);
+		usuario.setKeyEmail(rand.nextLong());
+		Usuario usuarioSalvo = usuarioRepository.save(usuario);
+		SimpleMailMessage email = new SimpleMailMessage();
+		email.setSubject("Confirmação de email");
+		email.setTo(usuario.getEmail());
+		email.setText(TEXTO_CONFIRMACAO + getUrlValidacaoEmail(usuarioSalvo));
+		email.setFrom(EMAIL);
+		sender.send(email);
+		return usuarioSalvo;
+	}
+	
+	private String getUrlValidacaoEmail(Usuario usuario) {
+		return frontUrl + END_POINT_USUARIO + END_POINT_VALIDAR_CONTA + usuario.getId() + "?key=" + usuario.getKeyEmail();
 	}
 
 	public String login(String usuario, String senha) throws AbstractException {
@@ -158,6 +198,15 @@ public class UsuarioService {
 			throw new AbstractException(USUÁRIO_SEM_PERMISSÃO, HttpStatus.FORBIDDEN);
 		}
 		return usuarioRepository.filtro(filtro, pageable);
+	}
+
+	public void resetSenha(String email) throws AbstractException {
+		Usuario usuario = usuarioRepository.findByEmail(email).orElseThrow(() -> new AbstractException(EMAIL_NAO_CADASTRADO, HttpStatus.NOT_FOUND));
+		ValidacaoConta validacaoConta = new ValidacaoConta();
+		validacaoConta.setLink(UUID.randomUUID().toString());
+		validacaoConta.setValidade(LocalDate.now().plusDays(3));
+		validacaoConta.setUsuario(usuario);
+		validacaoContaRepository.save(validacaoConta);
 	}
 
 }

@@ -4,16 +4,12 @@ import java.time.LocalDate;
 
 import javax.persistence.Column;
 import javax.persistence.Entity;
-import javax.persistence.EnumType;
-import javax.persistence.Enumerated;
 import javax.persistence.GeneratedValue;
 import javax.persistence.GenerationType;
 import javax.persistence.Id;
 import javax.persistence.JoinColumn;
 import javax.persistence.ManyToOne;
 import javax.persistence.Table;
-
-import br.com.cadastrodocumento.models.enumeration.PerfilEnum;
 
 @Entity
 @Table(name = "usuario")
@@ -34,6 +30,15 @@ public class Usuario {
 	
 	@Column(name = "data_cadastro", nullable = false)
 	private LocalDate dataCadastro;
+	
+	@Column(name = "ativo", nullable = false)
+	private Boolean ativo;
+	
+	@Column(name = "email_validado", nullable = false)
+	private Boolean emailValidado;
+	
+	@Column(name = "key_email", nullable = false)
+	private Long keyEmail;
 	
 	@ManyToOne
 	@JoinColumn(name = "ID_PERFIL", referencedColumnName = "ID")
@@ -87,6 +92,30 @@ public class Usuario {
 		this.perfil = perfil;
 	}
 	
+	public Boolean getAtivo() {
+		return ativo;
+	}
+
+	public void setAtivo(Boolean ativo) {
+		this.ativo = ativo;
+	}
+	
+	public Boolean getEmailValidado() {
+		return emailValidado;
+	}
+
+	public void setEmailValidado(Boolean emailValidado) {
+		this.emailValidado = emailValidado;
+	}
+
+	public Long getKeyEmail() {
+		return keyEmail;
+	}
+
+	public void setKeyEmail(Long keyEmail) {
+		this.keyEmail = keyEmail;
+	}
+
 	public boolean eAdmin() {
 		return Perfil.ADMINISTRADOR.getId().equals(this.perfil.getId());
 	}
