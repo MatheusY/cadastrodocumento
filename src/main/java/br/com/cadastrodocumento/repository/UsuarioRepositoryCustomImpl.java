@@ -76,6 +76,8 @@ public class UsuarioRepositoryCustomImpl implements UsuarioRepositoryCustom {
 				predicates.add(
 						criteriaBuilder.equal(root.get(Usuario_.perfil).get(Perfil_.id), filtro.getPerfil()));
 			}
+			
+			predicates.add(criteriaBuilder.equal(root.get(Usuario_.emailValidado), true));
 		}
 
 		return predicates;

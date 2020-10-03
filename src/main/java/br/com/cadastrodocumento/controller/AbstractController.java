@@ -10,7 +10,6 @@ import org.springframework.data.domain.PageImpl;
 
 import br.com.cadastrodocumento.exception.AbstractException;
 import br.com.cadastrodocumento.models.entity.Usuario;
-import br.com.cadastrodocumento.repository.UsuarioRepository;
 import br.com.cadastrodocumento.service.UsuarioService;
 
 public class AbstractController {

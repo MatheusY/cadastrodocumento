@@ -1,6 +1,8 @@
 package br.com.cadastrodocumento.service;
 
 import java.time.LocalDate;
+import java.util.HashMap;
+import java.util.Map;
 import java.util.Optional;
 import java.util.Random;
 import java.util.UUID;
@@ -12,17 +14,20 @@ import javax.xml.bind.DatatypeConverter;
 
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
+import org.springframework.dao.DataIntegrityViolationException;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.http.HttpStatus;
 import org.springframework.mail.MailSender;
 import org.springframework.mail.SimpleMailMessage;
+import org.springframework.orm.jpa.JpaObjectRetrievalFailureException;
 import org.springframework.security.core.authority.AuthorityUtils;
 import org.springframework.security.core.userdetails.User;
 import org.springframework.security.core.userdetails.UsernameNotFoundException;
 import org.springframework.stereotype.Service;
 
 import br.com.cadastrodocumento.exception.AbstractException;
+import br.com.cadastrodocumento.exception.ForeignOrUniqueKeyNotExistsException;
 import br.com.cadastrodocumento.helper.LoginHelper;
 import br.com.cadastrodocumento.models.entity.EncryptConfig;
 import br.com.cadastrodocumento.models.entity.Perfil;
@@ -80,6 +85,13 @@ public class UsuarioService {
 	public static final String DESEDE_ENCRYPTION_SCHEME = "DESede";
 	private static final String USUARIO_NAO_ENCONTRADO = "Usuário não encontrado!";
 	private static final String EMAIL_NAO_CADASTRADO = "E-mail não cadastrado!";
+	
+	private static Map<String, String> mensagens = new HashMap<>();
+	
+	static {
+		mensagens.put("UK_USUARIO_01", "Nome do usuário já existe!");
+		mensagens.put("UK_USUARIO_02", "Email já cadastrado!");
+	}
 
 
 	public UsuarioService() throws Exception {
@@ -93,19 +105,24 @@ public class UsuarioService {
 		config.setKey(config.getSkf().generateSecret(config.getKs()));
 	}
 
-	public Usuario salvar(Usuario usuario) {
-		usuario.setDataCadastro(LocalDate.now());
-
-		String hash = LoginHelper.encrypt(config, usuario.getSenha());
-		usuario.setSenha(hash);
-		usuario.setPerfil(Perfil.VISUALIZADOR);
-		usuario.setAtivo(false);
-		usuario.setEmailValidado(false);
-		usuario.setKeyEmail(rand.nextLong());
-		Usuario usuarioSalvo = usuarioRepository.save(usuario);
-		SimpleMailMessage email = new SimpleMailMessage();
-		enviarEmailConfirmacao(usuario, usuarioSalvo, email);
-		return usuarioSalvo;
+	public Usuario salvar(Usuario usuario) throws AbstractException {
+		try {
+			usuario.setDataCadastro(LocalDate.now());
+			
+			String hash = LoginHelper.encrypt(config, usuario.getSenha());
+			usuario.setSenha(hash);
+			usuario.setPerfil(Perfil.VISUALIZADOR);
+			usuario.setAtivo(false);
+			usuario.setEmailValidado(false);
+			usuario.setKeyEmail(rand.nextLong());
+			Usuario usuarioSalvo = usuarioRepository.save(usuario);
+			
+			SimpleMailMessage email = new SimpleMailMessage();
+			enviarEmailConfirmacao(usuario, usuarioSalvo, email);
+			return usuarioSalvo;
+		} catch(DataIntegrityViolationException | JpaObjectRetrievalFailureException e) {
+			throw new ForeignOrUniqueKeyNotExistsException(e, mensagens);
+		} 
 	}
 
 	private void enviarEmailConfirmacao(Usuario usuario, Usuario usuarioSalvo, SimpleMailMessage email) {

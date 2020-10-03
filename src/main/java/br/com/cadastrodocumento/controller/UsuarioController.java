@@ -11,7 +11,6 @@ import org.springframework.http.HttpStatus;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PatchMapping;
 import org.springframework.web.bind.annotation.PathVariable;
-import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.PutMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
@@ -25,7 +24,6 @@ import br.com.cadastrodocumento.exception.AbstractException;
 import br.com.cadastrodocumento.models.entity.Usuario;
 import br.com.cadastrodocumento.service.UsuarioService;
 import br.com.cadastrodocumento.vo.AtualizacaoSenhaVO;
-import br.com.cadastrodocumento.vo.AuthVO;
 import br.com.cadastrodocumento.vo.FiltroUsuarioVO;
 import br.com.cadastrodocumento.vo.UsuarioVO;
 
@@ -36,12 +34,6 @@ public class UsuarioController extends AbstractController {
 	@Autowired
 	private UsuarioService usuarioService;
 
-	@PostMapping
-	@ResponseStatus(code = HttpStatus.CREATED)
-	public Long save(@RequestBody @Valid AuthVO usuarioVO) {
-		return usuarioService.salvar(convertVOToEntity(usuarioVO, Usuario.class)).getId();
-	}
-	
 	@PutMapping("/{id}")
 	@ResponseStatus(code = HttpStatus.OK)
 	public TokenDTO update(@PathVariable("id") Long id, @RequestBody @Valid UsuarioVO usuarioVO, Principal principal) throws AbstractException {

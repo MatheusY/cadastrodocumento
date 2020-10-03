@@ -1,6 +1,6 @@
 package br.com.cadastrodocumento.controller;
 
-import javax.validation.Valid;import javax.websocket.server.PathParam;
+import javax.validation.Valid;
 
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
@@ -39,7 +39,7 @@ public class LoginController extends AbstractController {
 	
 	@PostMapping("/cadastrar")
 	@ResponseStatus(code = HttpStatus.CREATED)
-	public Long save(@RequestBody @Valid AuthVO usuarioVO) {
+	public Long save(@RequestBody @Valid AuthVO usuarioVO) throws AbstractException {
 		return usuarioService.salvar(convertVOToEntity(usuarioVO, Usuario.class)).getId();
 	}
 	
