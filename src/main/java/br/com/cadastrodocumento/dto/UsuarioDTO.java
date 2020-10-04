@@ -9,6 +9,8 @@ public class UsuarioDTO {
 	private String email;
 	
 	private PerfilDTO perfil;
+	
+	private Boolean ativo;
 
 	public Long getId() {
 		return id;
@@ -41,4 +43,13 @@ public class UsuarioDTO {
 	public void setPerfil(PerfilDTO perfil) {
 		this.perfil = perfil;
 	}
+
+	public Boolean getAtivo() {
+		return ativo;
+	}
+
+	public void setAtivo(Boolean ativo) {
+		this.ativo = ativo;
+	}
+	
 }

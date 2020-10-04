@@ -7,6 +7,10 @@ public class FiltroUsuarioVO {
 	private String email;
 
 	private Short perfil;
+	
+	private boolean ativo;
+	
+	private boolean inativo;
 
 	public String getUsuario() {
 		return usuario;
@@ -31,6 +35,21 @@ public class FiltroUsuarioVO {
 	public void setPerfil(Short perfil) {
 		this.perfil = perfil;
 	}
-	
+
+	public boolean getAtivo() {
+		return ativo;
+	}
+
+	public void setAtivo(boolean ativo) {
+		this.ativo = ativo;
+	}
+
+	public boolean getInativo() {
+		return inativo;
+	}
+
+	public void setInativo(boolean inativo) {
+		this.inativo = inativo;
+	}
 	
 }

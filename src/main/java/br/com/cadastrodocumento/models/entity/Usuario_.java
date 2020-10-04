@@ -11,5 +11,5 @@ public abstract class Usuario_ {
 	public static volatile SingularAttribute<Usuario, String> email;
 	public static volatile SingularAttribute<Usuario, Perfil> perfil;
 	public static volatile SingularAttribute<Usuario, Boolean> emailValidado;
-	
+	public static volatile SingularAttribute<Usuario, Boolean> ativo;
 }

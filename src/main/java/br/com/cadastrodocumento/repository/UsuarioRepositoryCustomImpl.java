@@ -40,6 +40,7 @@ public class UsuarioRepositoryCustomImpl implements UsuarioRepositoryCustom {
 		if (count == 0) {
 			return new PageImpl<>(Collections.emptyList(), pageable, count);
 		}
+		select.orderBy(criteriaBuilder.asc(root.get(Usuario_.usuario)));
 
 		TypedQuery<Usuario> typedQuery = entityManager.createQuery(select);
 		typedQuery.setFirstResult((int) pageable.getOffset());
@@ -77,7 +78,14 @@ public class UsuarioRepositoryCustomImpl implements UsuarioRepositoryCustom {
 						criteriaBuilder.equal(root.get(Usuario_.perfil).get(Perfil_.id), filtro.getPerfil()));
 			}
 			
-			predicates.add(criteriaBuilder.equal(root.get(Usuario_.emailValidado), true));
+		
+			if(filtro.getAtivo() && !filtro.getInativo()) {
+				predicates.add(criteriaBuilder.equal(root.get(Usuario_.ativo), Boolean.TRUE));
+			} else if(!filtro.getAtivo() && filtro.getInativo()) {
+				predicates.add(criteriaBuilder.equal(root.get(Usuario_.ativo), Boolean.FALSE));
+			}
+			
+			predicates.add(criteriaBuilder.equal(root.get(Usuario_.emailValidado), Boolean.TRUE));
 		}
 
 		return predicates;

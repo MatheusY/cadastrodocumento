@@ -18,6 +18,8 @@ public class UsuarioVO {
 	
 	private PerfilVO perfil;
 	
+	private Boolean ativo;
+	
 	public Long getId() {
 		return id;
 	}
@@ -48,6 +50,14 @@ public class UsuarioVO {
 
 	public void setPerfil(PerfilVO perfil) {
 		this.perfil = perfil;
+	}
+
+	public Boolean getAtivo() {
+		return ativo;
+	}
+
+	public void setAtivo(Boolean ativo) {
+		this.ativo = ativo;
 	}
 	
 }

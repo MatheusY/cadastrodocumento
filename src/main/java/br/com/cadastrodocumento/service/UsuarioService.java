@@ -1,6 +1,8 @@
 package br.com.cadastrodocumento.service;
 
 import java.time.LocalDate;
+import java.util.ArrayList;
+import java.util.Collections;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.Optional;
@@ -16,6 +18,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.dao.DataIntegrityViolationException;
 import org.springframework.data.domain.Page;
+import org.springframework.data.domain.PageImpl;
 import org.springframework.data.domain.Pageable;
 import org.springframework.http.HttpStatus;
 import org.springframework.mail.MailSender;
@@ -66,18 +69,18 @@ public class UsuarioService {
 	private static final String USUÁRIO_OU_SENHA_INVÁLIDO = "Usuário ou senha inválido!";
 
 	private static final String USUÁRIO_SEM_PERMISSÃO = "Usuário sem permissão";
-	
+
 	Random rand = new Random();
 
 	@Autowired
 	private UsuarioRepository usuarioRepository;
-	
+
 	@Autowired
 	private ValidacaoContaRepository validacaoContaRepository;
-	
+
 	@Autowired
 	private MailSender sender;
-	
+
 	@Value("${front-end.url}")
 	private String frontUrl;
 
@@ -85,14 +88,13 @@ public class UsuarioService {
 	public static final String DESEDE_ENCRYPTION_SCHEME = "DESede";
 	private static final String USUARIO_NAO_ENCONTRADO = "Usuário não encontrado!";
 	private static final String EMAIL_NAO_CADASTRADO = "E-mail não cadastrado!";
-	
+
 	private static Map<String, String> mensagens = new HashMap<>();
-	
+
 	static {
 		mensagens.put("UK_USUARIO_01", "Nome do usuário já existe!");
 		mensagens.put("UK_USUARIO_02", "Email já cadastrado!");
 	}
-
 
 	public UsuarioService() throws Exception {
 		config = new EncryptConfig();
@@ -108,7 +110,7 @@ public class UsuarioService {
 	public Usuario salvar(Usuario usuario) throws AbstractException {
 		try {
 			usuario.setDataCadastro(LocalDate.now());
-			
+
 			String hash = LoginHelper.encrypt(config, usuario.getSenha());
 			usuario.setSenha(hash);
 			usuario.setPerfil(Perfil.VISUALIZADOR);
@@ -116,13 +118,13 @@ public class UsuarioService {
 			usuario.setEmailValidado(false);
 			usuario.setKeyEmail(rand.nextLong());
 			Usuario usuarioSalvo = usuarioRepository.save(usuario);
-			
+
 			SimpleMailMessage email = new SimpleMailMessage();
 			enviarEmailConfirmacao(usuario, usuarioSalvo, email);
 			return usuarioSalvo;
-		} catch(DataIntegrityViolationException | JpaObjectRetrievalFailureException e) {
+		} catch (DataIntegrityViolationException | JpaObjectRetrievalFailureException e) {
 			throw new ForeignOrUniqueKeyNotExistsException(e, mensagens);
-		} 
+		}
 	}
 
 	private void enviarEmailConfirmacao(Usuario usuario, Usuario usuarioSalvo, SimpleMailMessage email) {
@@ -132,19 +134,20 @@ public class UsuarioService {
 		email.setFrom(EMAIL);
 		sender.send(email);
 	}
-	
+
 	private String getUrlValidacaoEmail(Usuario usuario) {
-		return frontUrl + END_POINT_USUARIO + END_POINT_VALIDAR_CONTA + usuario.getId() + "?key=" + usuario.getKeyEmail();
+		return frontUrl + END_POINT_USUARIO + END_POINT_VALIDAR_CONTA + usuario.getId() + "?key="
+				+ usuario.getKeyEmail();
 	}
 
 	public String login(String usuario, String senha) throws AbstractException {
 		String senhaHash = LoginHelper.encrypt(config, senha);
 		Usuario user = usuarioRepository.findByUsuarioAndSenha(usuario, senhaHash)
 				.orElseThrow(() -> new AbstractException(USUÁRIO_OU_SENHA_INVÁLIDO, HttpStatus.BAD_REQUEST));
-		if(!user.getEmailValidado()) {
+		if (!user.getEmailValidado()) {
 			throw new AbstractException(EMAIL_NÃO_CONFIRMADO, HttpStatus.BAD_REQUEST);
 		}
-		if(!user.getAtivo()) {
+		if (!user.getAtivo()) {
 			throw new AbstractException(CONTA_NÃO_ATIVA, HttpStatus.BAD_REQUEST);
 		}
 		return geraToken(user);
@@ -191,22 +194,29 @@ public class UsuarioService {
 	}
 
 	public String update(Usuario usuario, String nomeUsuario) throws AbstractException {
-		Usuario usuarioPersistido = usuarioRepository.findById(usuario.getId())
-				.orElseThrow(() -> new AbstractException(USUARIO_NAO_ENCONTRADO, HttpStatus.NOT_FOUND));
-		usuario.setSenha(usuarioPersistido.getSenha());
-		usuario.setDataCadastro(usuarioPersistido.getDataCadastro());
-		if (verificaUsuarioEAdmin(nomeUsuario)) {
-			usuarioRepository.save(usuario);
-			 return usuarioPersistido.getUsuario().equals(nomeUsuario) ? geraToken(usuario) : null;
-		} else if (usuarioPersistido.getUsuario().equals(nomeUsuario)) {
-			usuario.setPerfil(usuarioPersistido.getPerfil());
-			usuarioRepository.save(usuario);
-			return geraToken(usuario);
-		} else {
-			throw new AbstractException(USUÁRIO_SEM_PERMISSÃO, HttpStatus.FORBIDDEN);
+		try {
+			Usuario usuarioPersistido = usuarioRepository.findById(usuario.getId())
+					.orElseThrow(() -> new AbstractException(USUARIO_NAO_ENCONTRADO, HttpStatus.NOT_FOUND));
+			usuario.setSenha(usuarioPersistido.getSenha());
+			usuario.setDataCadastro(usuarioPersistido.getDataCadastro());
+			usuario.setEmailValidado(usuarioPersistido.getEmailValidado());
+			usuario.setKeyEmail(usuarioPersistido.getKeyEmail());
+			if (verificaUsuarioEAdmin(nomeUsuario)) {
+				usuarioRepository.save(usuario);
+				return usuarioPersistido.getUsuario().equals(nomeUsuario) ? geraToken(usuario) : null;
+			} else if (usuarioPersistido.getUsuario().equals(nomeUsuario)) {
+				usuario.setPerfil(usuarioPersistido.getPerfil());
+				usuario.setAtivo(usuarioPersistido.getAtivo());
+				usuarioRepository.save(usuario);
+				return geraToken(usuario);
+			} else {
+				throw new AbstractException(USUÁRIO_SEM_PERMISSÃO, HttpStatus.FORBIDDEN);
+			}
+		} catch (DataIntegrityViolationException | JpaObjectRetrievalFailureException e) {
+			throw new ForeignOrUniqueKeyNotExistsException(e, mensagens);
 		}
 	}
-	
+
 	private String geraToken(Usuario user) {
 		return LoginHelper.createJWT(user, "subject", 86400000);
 	}
@@ -218,25 +228,30 @@ public class UsuarioService {
 
 	public void atualizarSenha(String senha, String novaSenha, Usuario usuario) throws AbstractException {
 		String senhaHash = LoginHelper.encrypt(config, senha);
-		if(senha.equals(novaSenha)) {
+		if (senha.equals(novaSenha)) {
 			throw new AbstractException(SENHAS_IGUAIS, HttpStatus.BAD_REQUEST);
 		}
-		if(!senhaHash.equals(usuario.getSenha())) {
+		if (!senhaHash.equals(usuario.getSenha())) {
 			throw new AbstractException(SENHA_INCORRETA, HttpStatus.BAD_REQUEST);
 		}
 		usuario.setSenha(LoginHelper.encrypt(config, novaSenha));
 		usuarioRepository.save(usuario);
 	}
 
-	public Page<Usuario> findByFiltro(FiltroUsuarioVO filtro, Pageable pageable, Usuario usuarioLogado) throws AbstractException {
-		if(!usuarioLogado.eAdmin()) {
+	public Page<Usuario> findByFiltro(FiltroUsuarioVO filtro, Pageable pageable, Usuario usuarioLogado)
+			throws AbstractException {
+		if (!usuarioLogado.eAdmin()) {
 			throw new AbstractException(USUÁRIO_SEM_PERMISSÃO, HttpStatus.FORBIDDEN);
+		}
+		if(!filtro.getAtivo() && !filtro.getInativo()) {
+			return new PageImpl<>(Collections.emptyList(), pageable, 0);
 		}
 		return usuarioRepository.filtro(filtro, pageable);
 	}
 
 	public void resetSenha(String email) throws AbstractException {
-		Usuario usuario = usuarioRepository.findByEmail(email).orElseThrow(() -> new AbstractException(EMAIL_NAO_CADASTRADO, HttpStatus.NOT_FOUND));
+		Usuario usuario = usuarioRepository.findByEmail(email)
+				.orElseThrow(() -> new AbstractException(EMAIL_NAO_CADASTRADO, HttpStatus.NOT_FOUND));
 		ValidacaoConta validacaoConta = new ValidacaoConta();
 		validacaoConta.setLink(UUID.randomUUID().toString());
 		validacaoConta.setValidade(LocalDate.now().plusDays(3));
@@ -245,8 +260,9 @@ public class UsuarioService {
 	}
 
 	public void validarEmail(Long id, Long key) throws AbstractException {
-		Usuario usuario = usuarioRepository.findByIdAndKeyEmail(id, key).orElseThrow(() -> new AbstractException(CONTA_NÃO_ENCONTRADA, HttpStatus.BAD_REQUEST));
-		if(usuario.getEmailValidado()) {
+		Usuario usuario = usuarioRepository.findByIdAndKeyEmail(id, key)
+				.orElseThrow(() -> new AbstractException(CONTA_NÃO_ENCONTRADA, HttpStatus.BAD_REQUEST));
+		if (usuario.getEmailValidado()) {
 			throw new AbstractException(EMAIL_JÁ_VALIDADO, HttpStatus.BAD_REQUEST);
 		}
 		usuario.setEmailValidado(true);
