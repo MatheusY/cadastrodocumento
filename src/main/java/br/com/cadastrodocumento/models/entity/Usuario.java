@@ -10,19 +10,22 @@ import javax.persistence.Id;
 import javax.persistence.JoinColumn;
 import javax.persistence.ManyToOne;
 import javax.persistence.Table;
+import javax.persistence.UniqueConstraint;
 
 @Entity
-@Table(name = "usuario")
+@Table(name = "usuario", uniqueConstraints = {
+		@UniqueConstraint(columnNames = "usuario", name = "uk_usuario_01"),
+		@UniqueConstraint(columnNames = "email", name = "uk_usuario_02")})
 public class Usuario {
 	
 	@Id
 	@GeneratedValue(strategy = GenerationType.IDENTITY)
 	private Long id;
 
-	@Column(name = "usuario", unique = true, nullable = false)
+	@Column(name = "usuario", nullable = false)
 	private String usuario;
 	
-	@Column(name = "email", unique = true, nullable = false)
+	@Column(name = "email", nullable = false)
 	private String email;
 	
 	@Column(name = "senha_hash", nullable = false)

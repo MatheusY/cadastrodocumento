@@ -32,9 +32,16 @@ public class LoginController extends AbstractController {
 		return token;
 	}
 	
-	@PatchMapping("/reset-senha")
-	public void resetSenha(@RequestBody String email) throws AbstractException {
+	@PostMapping("/reset-senha")
+	@ResponseStatus(code = HttpStatus.CREATED)
+	public void resetSenha(@RequestParam String email ) throws AbstractException {
 		usuarioService.resetSenha(email);
+	}
+	
+	@PatchMapping("/reset-senha")
+	@ResponseStatus(code = HttpStatus.NO_CONTENT)
+	public void novaSenha(@RequestParam String key, @RequestParam String senha) throws AbstractException {
+		usuarioService.novaSenha(key, senha);
 	}
 	
 	@PostMapping("/cadastrar")

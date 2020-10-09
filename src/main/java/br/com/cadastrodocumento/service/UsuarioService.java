@@ -1,7 +1,6 @@
 package br.com.cadastrodocumento.service;
 
 import java.time.LocalDate;
-import java.util.ArrayList;
 import java.util.Collections;
 import java.util.HashMap;
 import java.util.Map;
@@ -46,6 +45,10 @@ import io.jsonwebtoken.Jwts;
 @Service
 public class UsuarioService {
 
+	private static final String TITULO_CONFIRMAÇÃO_EMAIL = "Confirmação de email";
+
+	private static final String TITULO_RESET_SENHA = "Reset de senha";
+
 	private static final String EMAIL_JÁ_VALIDADO = "Email já foi validado!";
 
 	private static final String CONTA_NÃO_ATIVA = "Conta não está ativa! Por favor fale com o administrador";
@@ -61,6 +64,8 @@ public class UsuarioService {
 	private static final String END_POINT_VALIDAR_CONTA = "validar-conta/";
 
 	private static final String END_POINT_USUARIO = "usuario/";
+	
+	private static final String RESET_SENHA_NOVA_SENHA_KEY = "reset-senha?key=";
 
 	private static final String SENHAS_IGUAIS = "As senhas são iguais";
 
@@ -119,25 +124,11 @@ public class UsuarioService {
 			usuario.setKeyEmail(rand.nextLong());
 			Usuario usuarioSalvo = usuarioRepository.save(usuario);
 
-			SimpleMailMessage email = new SimpleMailMessage();
-			enviarEmailConfirmacao(usuario, usuarioSalvo, email);
+			enviarEmailConfirmacao(usuario, usuarioSalvo);
 			return usuarioSalvo;
 		} catch (DataIntegrityViolationException | JpaObjectRetrievalFailureException e) {
 			throw new ForeignOrUniqueKeyNotExistsException(e, mensagens);
 		}
-	}
-
-	private void enviarEmailConfirmacao(Usuario usuario, Usuario usuarioSalvo, SimpleMailMessage email) {
-		email.setSubject("Confirmação de email");
-		email.setTo(usuario.getEmail());
-		email.setText(TEXTO_CONFIRMACAO + getUrlValidacaoEmail(usuarioSalvo));
-		email.setFrom(EMAIL);
-		sender.send(email);
-	}
-
-	private String getUrlValidacaoEmail(Usuario usuario) {
-		return frontUrl + END_POINT_USUARIO + END_POINT_VALIDAR_CONTA + usuario.getId() + "?key="
-				+ usuario.getKeyEmail();
 	}
 
 	public String login(String usuario, String senha) throws AbstractException {
@@ -164,17 +155,6 @@ public class UsuarioService {
 			return Optional.of(user);
 		}
 		return Optional.empty();
-	}
-
-	public static Claims decodeJWT(String token) {
-		try {
-			Claims claims = Jwts.parser().setSigningKey(DatatypeConverter.parseBase64Binary(LoginHelper.SECRET_KEY))
-					.parseClaimsJws(token).getBody();
-			return claims;
-
-		} catch (ExpiredJwtException e) {
-			throw new UsernameNotFoundException("Usuário deslogado, sessão inválida!");
-		}
 	}
 
 	public Usuario findByUsuario(String name) throws AbstractException {
@@ -217,15 +197,6 @@ public class UsuarioService {
 		}
 	}
 
-	private String geraToken(Usuario user) {
-		return LoginHelper.createJWT(user, "subject", 86400000);
-	}
-
-	private boolean verificaUsuarioEAdmin(String nomeUsuario) throws AbstractException {
-		Usuario usuarioLogado = findByUsuario(nomeUsuario);
-		return usuarioLogado.eAdmin();
-	}
-
 	public void atualizarSenha(String senha, String novaSenha, Usuario usuario) throws AbstractException {
 		String senhaHash = LoginHelper.encrypt(config, senha);
 		if (senha.equals(novaSenha)) {
@@ -255,8 +226,10 @@ public class UsuarioService {
 		ValidacaoConta validacaoConta = new ValidacaoConta();
 		validacaoConta.setLink(UUID.randomUUID().toString());
 		validacaoConta.setValidade(LocalDate.now().plusDays(3));
+		validacaoConta.setAtivo(true);
 		validacaoConta.setUsuario(usuario);
 		validacaoContaRepository.save(validacaoConta);
+		enviarEmailResetSenha(usuario, validacaoConta);
 	}
 
 	public void validarEmail(Long id, Long key) throws AbstractException {
@@ -267,6 +240,72 @@ public class UsuarioService {
 		}
 		usuario.setEmailValidado(true);
 		usuarioRepository.save(usuario);
+	}
+	
+	public void novaSenha(String link, String senha) throws AbstractException {
+		ValidacaoConta validacaoConta = validacaoContaRepository.findByLink(link).orElseThrow(() -> new AbstractException("Link inválido!", HttpStatus.BAD_REQUEST));
+		if (!validacaoConta.isAtivo()) {
+			throw new AbstractException("Esse link ja foi usado, solicite o reset de senha novamente.", HttpStatus.BAD_REQUEST);
+		}
+		if (validacaoConta.getValidade().isBefore(LocalDate.now())) {
+			throw new AbstractException("O link foi expirado, solicite o reset de senha novamente.", HttpStatus.BAD_REQUEST);
+		}
+		Usuario usuario = validacaoConta.getUsuario();
+		usuario.setSenha(LoginHelper.encrypt(config, senha));
+		usuarioRepository.save(usuario);
+		validacaoConta.setAtivo(false);
+		validacaoContaRepository.save(validacaoConta);
+	}
+	
+	private void enviarEmailConfirmacao(Usuario usuario, Usuario usuarioSalvo) {
+		SimpleMailMessage email = new SimpleMailMessage();
+		email.setSubject(TITULO_CONFIRMAÇÃO_EMAIL);
+		email.setText(TEXTO_CONFIRMACAO + getUrlValidacaoEmail(usuarioSalvo));
+		enviarEmail(usuario, email);
+	}
+	
+	private void enviarEmailResetSenha(Usuario usuario, ValidacaoConta validacaoConta) {
+		SimpleMailMessage email = new SimpleMailMessage();
+		email.setSubject(TITULO_RESET_SENHA);
+		String textoReset = "Foi solicitado um reset de senha para a sua conta " + usuario.getUsuario() + " caso tenha solicitado, clique no link abaixo! \n" + getUrlResetSenha(validacaoConta);
+		email.setText(textoReset);
+		enviarEmail(usuario, email);
+	}
+	
+
+	private void enviarEmail(Usuario usuario, SimpleMailMessage email) {
+		email.setTo(usuario.getEmail());
+		email.setFrom(EMAIL);
+		sender.send(email);
+	}
+
+	private String getUrlValidacaoEmail(Usuario usuario) {
+		return frontUrl + END_POINT_USUARIO + END_POINT_VALIDAR_CONTA + usuario.getId() + "?key="
+				+ usuario.getKeyEmail();
+	}
+	
+	private String getUrlResetSenha(ValidacaoConta validacaoConta) {
+		return frontUrl + END_POINT_USUARIO + RESET_SENHA_NOVA_SENHA_KEY + validacaoConta.getLink();
+	}
+	
+	private String geraToken(Usuario user) {
+		return LoginHelper.createJWT(user, "subject", 86400000);
+	}
+
+	private boolean verificaUsuarioEAdmin(String nomeUsuario) throws AbstractException {
+		Usuario usuarioLogado = findByUsuario(nomeUsuario);
+		return usuarioLogado.eAdmin();
+	}
+	
+	private static Claims decodeJWT(String token) {
+		try {
+			Claims claims = Jwts.parser().setSigningKey(DatatypeConverter.parseBase64Binary(LoginHelper.SECRET_KEY))
+					.parseClaimsJws(token).getBody();
+			return claims;
+
+		} catch (ExpiredJwtException e) {
+			throw new UsernameNotFoundException("Usuário deslogado, sessão inválida!");
+		}
 	}
 
 }

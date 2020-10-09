@@ -25,6 +25,9 @@ public class ValidacaoConta {
 	@Column(name = "validade", nullable = false)
 	private LocalDate validade;
 	
+	@Column(name = "ativo", nullable = false)
+	private boolean ativo;
+	
 	@ManyToOne
 	@JoinColumn(name = "id_usuario", referencedColumnName = "ID")
 	private Usuario usuario;
@@ -51,6 +54,14 @@ public class ValidacaoConta {
 
 	public void setValidade(LocalDate validade) {
 		this.validade = validade;
+	}
+	
+	public boolean isAtivo() {
+		return ativo;
+	}
+
+	public void setAtivo(boolean ativo) {
+		this.ativo = ativo;
 	}
 
 	public Usuario getUsuario() {
