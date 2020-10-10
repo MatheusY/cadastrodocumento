@@ -63,6 +63,7 @@ public class SpringSecurityConfiguration extends WebSecurityConfigurerAdapter{
 			.formLogin().disable()
 			.httpBasic().disable()
 			.logout().disable();
+		http.cors();
 	}
 	
 	@Bean
